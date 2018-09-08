@@ -1,0 +1,6 @@
+data/
+Model/
+resNet50/
+*.pdf
+*.png
+*.zip
