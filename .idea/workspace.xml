@@ -3,9 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="451ae6d5-4d2a-41f6-98d6-cd0493050ad9" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change beforePath="$PROJECT_DIR$/TrainModel.py" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/get_5points.py" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/sb_128x128.py" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/ImageProcess.py" afterPath="$PROJECT_DIR$/ImageProcess.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -21,35 +20,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="ExtractHeadFeature.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="ExtractHeadFeature.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ExtractHeadFeature.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="190">
               <caret line="58" column="43" lean-forward="false" selection-start-line="58" selection-start-column="43" selection-end-line="58" selection-end-column="43" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ImageProcess.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ImageProcess.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="452">
-              <caret line="179" column="35" lean-forward="false" selection-start-line="179" selection-start-column="35" selection-end-line="179" selection-end-column="35" />
-              <folding>
-                <element signature="e#17#26#0" expanded="true" />
-                <element signature="e#930#991#0" expanded="false" />
-                <element signature="e#1138#1201#0" expanded="false" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="get_path_file.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/get_path_file.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -135,22 +110,6 @@
             <path>
               <item name="MoGaze" type="b2602c69:ProjectViewProjectNode" />
               <item name="MoGaze" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MoGaze" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MoGaze" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MoGaze" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MoGaze" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-              <item name="train" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MoGaze" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MoGaze" type="462c0819:PsiDirectoryNode" />
-              <item name="resNet50" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -303,7 +262,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/ImageProcess.py</url>
-          <line>200</line>
+          <line>217</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
@@ -367,14 +326,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ExtractHeadFeature.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="58" column="43" lean-forward="false" selection-start-line="58" selection-start-column="43" selection-end-line="58" selection-end-column="43" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/get_5points.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-38">
@@ -383,10 +334,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/get_path_file.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ImageProcess.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="452">
-          <caret line="179" column="35" lean-forward="false" selection-start-line="179" selection-start-column="35" selection-end-line="179" selection-end-column="35" />
+        <state relative-caret-position="295">
+          <caret line="187" column="35" lean-forward="false" selection-start-line="187" selection-start-column="35" selection-end-line="187" selection-end-column="35" />
           <folding>
             <element signature="e#17#26#0" expanded="true" />
             <element signature="e#930#991#0" expanded="false" />
@@ -395,10 +354,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/get_path_file.py">
+    <entry file="file://$PROJECT_DIR$/ExtractHeadFeature.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state relative-caret-position="190">
+          <caret line="58" column="43" lean-forward="false" selection-start-line="58" selection-start-column="43" selection-end-line="58" selection-end-column="43" />
           <folding />
         </state>
       </provider>

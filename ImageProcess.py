@@ -171,14 +171,26 @@ for filename in filenames:
 
         img = cv2.imread(filename)
         scale_ratio=img.shape[0]*1.0/imgSize
+<<<<<<< HEAD
         input_img_1 = cv2.resize(img, (imgSize, imgSize))
+=======
+
+
+        ### crop_img : size :200*200
+        crop_img_size = 200
+        input_img_1 = cv2.resize(img, (crop_img_size, crop_img_size))
+>>>>>>> 86fb82ef6aa3df69dce258f1a00cac992ea346ae
 
         image = get_data(input_img_1)
         mod.forward(Batch([mx.nd.array(image)]))
         output_outer = mod.get_outputs()[0].asnumpy()
         output_outer = output_outer * float(imgSize)
         output_outer = np.reshape(output_outer, (2, -1))
+<<<<<<< HEAD
         print output_outer[:10]
+=======
+        print(output_outer[:10])
+>>>>>>> 86fb82ef6aa3df69dce258f1a00cac992ea346ae
 
         check_points=np.ones((3,87),dtype='float32')
         for i in range(output_outer.shape[1]):
@@ -187,8 +199,13 @@ for filename in filenames:
         temp=np.dot(inverse_matrix,check_points)
         temp=temp.astype(int)
 
+<<<<<<< HEAD
         print temp.shape
         print temp[:10]
+=======
+        print(temp.shape)
+        print(temp[:10])
+>>>>>>> 86fb82ef6aa3df69dce258f1a00cac992ea346ae
 
         i=0
         while i<87:

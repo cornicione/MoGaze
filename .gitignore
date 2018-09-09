@@ -7,3 +7,4 @@ resNet50/
 *.zip
 *.DS_Store
 *.gitignore
+.idea/
