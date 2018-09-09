@@ -11,7 +11,7 @@ epoch = 9
 imgSize = 128
 model_prefix = './resNet50/zrn_landmark87_ResNet50'
 ctx = mx.cpu()
-path='./crop_img/image.txt'
+path='/Users/momo/Desktop/MoGaze/data/train/head/img.txt'
 # path_inverse = './checkpoints/inverse.txt'
 
 
@@ -25,12 +25,12 @@ def main_Image(path,model_prefix,epoch):
     fcnxs_args = {k: v.as_in_context(ctx) for k, v in fcnxs_args.items()}
     fcnxs_auxs = {k: v.as_in_context(ctx) for k, v in fcnxs_auxs.items()}
     mod = mx.mod.Module(symbol=fcnxs, context=ctx, label_names=('l2_label',))
-    mx.viz.plot_network(mod).view()
+    # mx.viz.plot_network(mod).view()
     del fcnxs_args['data']
     del fcnxs_args['l2_label']
     mod.bind(for_training=False, data_shapes=[('data', (1, 3, imgSize, imgSize))], force_rebind=True)
     mod.set_params(fcnxs_args, fcnxs_auxs, allow_missing=True)
-    # lines = os.listdir(path)
+
     f = open(path)
     lines = f.readlines()
     count=0
@@ -66,6 +66,7 @@ def main_Image(path,model_prefix,epoch):
             check_points[1][i]=float(output_outer[1, i]*scale_ratio)
         temp=np.dot(inverse_matrix,check_points)
         temp=temp.astype(int)
+
         #show_img=cv2.imread('./source_img/'+os.path.splitext(ful_name)[0]+'.jpg')
         a = os.path.split(ful_name)[1]
         a = a.replace('_crop.jpg','.txt')
@@ -78,9 +79,9 @@ def main_Image(path,model_prefix,epoch):
         '''
         i=0
         while i<87:
-                cv2.circle(show_img, (temp[0][i],temp[1][i]), 1,
-                           (0, 255, 0), 1)
-                i+=1
+            cv2.circle(show_img, (temp[0][i],temp[1][i]), 1,
+                       (0, 255, 0), 1)
+            i+=1
         '''
         #cv2.imshow(ful_name, show_img)
         #cv2.waitKey(2000)

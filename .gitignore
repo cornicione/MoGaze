@@ -1,6 +1,9 @@
 data/
 Model/
 resNet50/
+*.gv
 *.pdf
 *.png
 *.zip
+*.DS_Store
+*.gitignore
