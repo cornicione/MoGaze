@@ -1,18 +1,31 @@
-#coding=utf8
+#coding = utf-8
 
-import sys, os
-os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
-import numpy as np
-import mxnet as mx
+import os
 import cv2
+import mxnet as mx
+import numpy as np
+from numpy import *
 from collections import namedtuple
-Batch = namedtuple('Batch', ['data'])
-epoch = 9
-imgSize = 128
-model_prefix = './resNet50/zrn_landmark87_ResNet50'
-ctx = mx.cpu()
-path='/Users/momo/Desktop/MoGaze/data/train/head/img.txt'
-# path_inverse = './checkpoints/inverse.txt'
+
+from sklearn.linear_model import Ridge
+from sklearn.metrics import mean_absolute_error
+from sklearn.externals import joblib
+
+
+def ReadFile(file_path, remove_pattern='\n'):
+    '''
+    :param remove_pattern: if Windows, pattern = '\r'
+    '''
+    with open(file_path) as f:
+        lines = f.readlines()
+    f.close()
+
+    line = []
+    for l in lines:
+        line.append(l.split(remove_pattern)[0])
+    lines = line
+
+    return lines
 
 
 def get_data(image):
@@ -20,76 +33,141 @@ def get_data(image):
     image = np.reshape(image, (1, image.shape[0], image.shape[1], image.shape[2]))
     return image
 
-def main_Image(path,model_prefix,epoch):
+def LoadMxModel(model_prefix,epoch):
+
     fcnxs, fcnxs_args, fcnxs_auxs = mx.model.load_checkpoint(model_prefix, epoch)
     fcnxs_args = {k: v.as_in_context(ctx) for k, v in fcnxs_args.items()}
     fcnxs_auxs = {k: v.as_in_context(ctx) for k, v in fcnxs_auxs.items()}
     mod = mx.mod.Module(symbol=fcnxs, context=ctx, label_names=('l2_label',))
-    # mx.viz.plot_network(mod).view()
+#    mx.viz.plot_network(fcnxs).view()
     del fcnxs_args['data']
     del fcnxs_args['l2_label']
-    mod.bind(for_training=False, data_shapes=[('data', (1, 3, imgSize, imgSize))], force_rebind=True)
+    mod.bind(for_training=False,
+             data_shapes=[('data', (1, 3, imgSize, imgSize))],
+             force_rebind=True)
+    mod.set_params(fcnxs_args, fcnxs_auxs)
+
+
+    return mod
+
+def LoadFeaExtractor(model_prefix,epoch):
+
+    fcnxs, fcnxs_args, fcnxs_auxs = mx.model.load_checkpoint(model_prefix, epoch)
+    fcnxs_args = {k: v.as_in_context(ctx) for k, v in fcnxs_args.items()}
+    fcnxs_auxs = {k: v.as_in_context(ctx) for k, v in fcnxs_auxs.items()}
+    mod = mx.mod.Module(symbol=fcnxs, context=ctx, label_names=('l2_label',))
+    #    mx.viz.plot_network(fcnxs).view()
+    del fcnxs_args['data']
+    del fcnxs_args['l2_label']
+    mod.bind(for_training=False,
+             data_shapes=[('data', (1, 3, imgSize, imgSize))],
+             force_rebind=True)
     mod.set_params(fcnxs_args, fcnxs_auxs, allow_missing=True)
 
-    f = open(path)
-    lines = f.readlines()
-    count=0
-    for line in lines:
-        line = line.strip()
-        ful_name=line
-        if ful_name.startswith('.DS_Store'):
-            continue
-        path_inverse = ful_name.replace('crop_img','checkpoints')
-        path_inverse = path_inverse.replace('_crop.jpg', '.inverse')
-        fr = open(path_inverse)
-        liness = fr.readlines()
-        img = cv2.imread(ful_name)
-        inverse_matrix=np.zeros((2,3),dtype='float32')
-        inverse_matrix[0][0] = float(liness[0][0:-1])
-        inverse_matrix[0][1] = float(liness[1][0:-1])
-        inverse_matrix[0][2] = float(liness[2][0:-1])
-        inverse_matrix[1][0] = float(liness[3][0:-1])
-        inverse_matrix[1][1] = float(liness[4][0:-1])
-        inverse_matrix[1][2] = float(liness[5][0:-1])
-        scale_ratio=img.shape[0]*1.0/imgSize
-        input_img_1 = cv2.resize(img, (imgSize, imgSize))
+    internals = mod.symbol.get_internals()
+    print(internals.list_outputs())
+    fea_symbol = internals['_plus23_output']
 
+    feature_extractor = mx.mod.Module(symbol=fea_symbol,
+                                      context=ctx,
+                                      label_names=None)
+    feature_extractor.bind(for_training=False,
+                           data_shapes=[('data', (1, 3, imgSize, imgSize))])
+
+    feature_extractor.set_params(fcnxs_args,
+                                 fcnxs_auxs)
+
+    return feature_extractor
+
+def GetFeaandGt(train_names, model, Gt, start_index, extract_num):
+
+    if start_index + extract_num > len(train_names):
+        extract_num = len(train_names)-start_index
+        print("[Get fea] out of the length of train_names")
+
+    features = np.zeros((extract_num, 512))
+    labels = np.zeros((extract_num, 2))
+
+    for ind, name in enumerate(train_names[start_index:start_index + extract_num]):
+        ori_img = cv2.imread(name)  # filename : original image (~900)
+        crop_img = ori_img[ori_img.shape[0] // 2 - 200:ori_img.shape[0] // 2 + 200,
+                   ori_img.shape[1] // 2 - 200:ori_img.shape[1] // 2 + 200,
+                   ...]
+        input_img_1 = cv2.resize(crop_img, (imgSize, imgSize))
         image = get_data(input_img_1)
 
-        mod.forward(Batch([mx.nd.array(image)]))
-        output_outer = mod.get_outputs()[0].asnumpy()
-        output_outer = output_outer * float(imgSize)
-        output_outer = np.reshape(output_outer, (2, -1))
-        check_points=np.ones((3,87),dtype='float32')
-        for i in range(output_outer.shape[1]):
-            check_points[0][i]=float(output_outer[0, i]*scale_ratio)
-            check_points[1][i]=float(output_outer[1, i]*scale_ratio)
-        temp=np.dot(inverse_matrix,check_points)
-        temp=temp.astype(int)
+        model.forward(Batch([mx.nd.array(image)]))
+        feature = mod.get_outputs()[0].asnumpy()
+        feature = feature.flatten()
 
-        #show_img=cv2.imread('./source_img/'+os.path.splitext(ful_name)[0]+'.jpg')
-        a = os.path.split(ful_name)[1]
-        a = a.replace('_crop.jpg','.txt')
-        fw=open('../face_data_deal/test_img/'+ a,'w')
-        for index in range(0,87):
-             fw.write(str(temp[0][index])+'\n')
-             fw.write(str(temp[1][index])+'\n')
-             i+=1
-        fw.close()
-        '''
-        i=0
-        while i<87:
-            cv2.circle(show_img, (temp[0][i],temp[1][i]), 1,
-                       (0, 255, 0), 1)
-            i+=1
-        '''
-        #cv2.imshow(ful_name, show_img)
-        #cv2.waitKey(2000)
-        count+=1
-       # cv2.imwrite('./result_img/'+os.path.splitext(ful_name)[0]+'.jpg',show_img)
-        if count%100==0:
-            print('已经处理了'+str(count/len(lines)*100)+'%'+'\n')
+        features[ind, :] = feature
+        labels[ind,:] = Gt[name.split('/')[-1]]
 
-# /data/test/faceImg/list.txt model/get_186pt_symbol 27
-if __name__ == "__main__":
-    main_Image(path=path,model_prefix=model_prefix,epoch=epoch)
+        print("to {} pic and name is {}".format(ind, name))
+
+    return features,labels
+
+
+def ReadGazeTxt(gt_txt):
+    ret = {}
+    with open(gt_txt,"r") as f:
+        while True :
+            line = f.readline()
+            if not line:
+                break
+            line = line.strip("\n")+".png"
+
+            lo = float(f.readline().strip("\n"))
+            la = float(f.readline().strip("\n"))
+            ret[line] = np.array([lo,la],dtype=np.float32)
+    return ret
+
+
+
+
+data_dir = "/data/mc_data/MC4/"
+train_dir = data_dir + 'train/'
+# test_dir = data_dir + 'test/'
+
+# clf_model_dir = "/home/momenta/Desktop/ckpt/HeadRidge/"
+# name_dir = '/home/mc/Desktop/'
+# all_names = ReadFile(name_dir + 'train_names.txt')
+# head_gt = ReadGazeTxt(data_dir + "head_label.txt")
+
+# all_names = ReadFile('/Users/momo/Desktop/MoGaze/data/train/head/img.txt')
+# head_gt = ReadGazeTxt('/Users/momo/Desktop/MoGaze/data/train/head_label.txt')
+
+ShuffleName = True
+Batch = namedtuple('Batch', ['data'])
+imgSize = 128
+ctx = mx.cpu()
+mod = LoadFeaExtractor('./resNet50/zrn_landmark87_ResNet50',9)
+
+# if ShuffleName:
+#     np.random.shuffle(all_names)
+
+valid_num = 5000
+valid_names = all_names[:valid_num]
+train_names = all_names[valid_num:]
+
+train_features, train_labels = GetFeaandGt(train_names, mod, head_gt, 0, 10000)
+test_features, test_labels = GetFeaandGt(valid_names, mod, head_gt, 0, 5000)
+
+clf = Ridge(alpha=2.0)
+clf.fit(train_features, train_labels)
+
+pre_test_labels = clf.predict(test_features)
+clf_mae = mean_absolute_error(pre_test_labels, test_labels, multioutput='raw_values')
+
+pre_train_labels = clf.predict(train_features)
+clf_mae_tr = mean_absolute_error(pre_train_labels, clf.predict(train_features),
+                                 multioutput='raw_values')
+
+print("clf valid mae: {}".format(clf_mae))
+print("clf train mae: {}".format(clf_mae_tr))
+
+
+save_path = clf_model_dir + 'HeadPose_tr{}.model'.format(train_features.shape[0])
+joblib.dump(clf, save_path)
+
+print('finished')

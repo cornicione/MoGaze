@@ -9,11 +9,13 @@ from numpy import *
 from collections import namedtuple
 
 
+
+
+
 def get_5checkpoins(path):
     img =face_recognition.load_image_file(path)
-    face_location=face_recognition.face_locations(img)
     face_landmarks=face_recognition.face_landmarks(img)
-    chin=face_landmarks[0]['chin']
+
     left_eyebrow=face_landmarks[0]['left_eyebrow']
     right_eyebrow=face_landmarks[0]['right_eyebrow']
     nose_bridge=face_landmarks[0]['nose_bridge']
@@ -54,13 +56,10 @@ def get_5checkpoins(path):
 
 
 def get_AffineMatrix(path):
-    crop_size=(200,200)
     benchmark_180=[
         (67,83),
         (133,83),
         (100,144),
-       # (72,144),
-       # (128,144)
     ]
     check_points,face_landmark=get_5checkpoins(path)
     src_matrix_src=np.zeros((3,2),dtype='float32')
@@ -91,38 +90,8 @@ def get_AffineMatrix_result(img_path):
         check_points[2][index]=1
         index+=1
 
-    # cou = 0
-    # check_points_result = np.dot(affine_matrix, check_points)
-    # check_points_int = check_points_result.astype(int)
-    # for i in range (0,len(check_points_int[0])):
-    #     cou+= 1
-    #     cv2.circle(dst_img,(check_points_int[0][i],check_points_int[1][i]), 1, (0, 255, 0), 1)
-    #     cv2.putText(dst_img, str(cou),(check_points_int[0][i],check_points_int[1][i]), cv2.FONT_HERSHEY_COMPLEX,
-    #                 0.4, (200, 255, 255), 1)
-
     inverse_affine=cv2.invertAffineTransform(affine_matrix)
-
-
-    # cou = 0
-    # check_points_result=np.row_stack((check_points_result,np.ones((1,len(face_landmark)),dtype='float32')))
-    # check_points_source = np.dot(inverse_affine,check_points_result)
-    # check_points_source_int = check_points_source.astype(int)
-    # for i in range(0, len(check_points_int[0])):
-    #     cou += 1
-    #     cv2.circle(src_img, (check_points_source_int[0][i], check_points_source_int[1][i]),
-    #                1, (255, 255, 0), 1)
-    #     cv2.putText(src_img, str(cou), (check_points_source_int[0][i], check_points_source_int[1][i]),
-    #                 cv2.FONT_HERSHEY_COMPLEX, 0.4, (200, 255, 255), 1)
-
     dst_img=dst_img[0:int(200),0:int(200)]
-    # cv2.imshow('source',src_img)
-    # cv2.imshow('affine',dst_img)
-    # cv2.waitKey()
-
-    # file_split=path.split('/')
-    # filename_name=(os.path.splitext(file_split[len(file_split)-1]))[0]
-    # cv2.imwrite(save_dir + filename_name + '_crop.jpg', dst_img)
-
     return dst_img,inverse_affine,affine_matrix
 
 
@@ -143,7 +112,7 @@ def LoadMxModel(model_prefix,epoch):
     mod.bind(for_training=False,
              data_shapes=[('data', (1, 3, imgSize, imgSize))],
              force_rebind=True)
-    mod.set_params(fcnxs_args, fcnxs_auxs, allow_missing=True)
+    mod.set_params(fcnxs_args, fcnxs_auxs)
 
     return mod
 
@@ -152,11 +121,11 @@ count=0
 pro_dir = '/Users/momo/Desktop/MoGaze/'
 data_dir = pro_dir + 'data/'
 train_dir = data_dir + 'train/'
-save_dir = train_dir + 'head_crop/'
 
 Batch = namedtuple('Batch', ['data'])
 f=open(train_dir+'head/img.txt')
 filenames=f.readlines()
+
 
 imgSize = 128
 model_prefix = './resNet50/zrn_landmark87_ResNet50'
@@ -166,53 +135,36 @@ mod = LoadMxModel(model_prefix, epoch=9)
 for filename in filenames:
     filename = filename.strip()
     count+=1
+
     if not filename.startswith('.DS_Store'):
-        crop_img, inverse_matrix, affine_matrix = get_AffineMatrix_result(filename)
 
-        img = cv2.imread(filename)
-        scale_ratio=img.shape[0]*1.0/imgSize
-<<<<<<< HEAD
-        input_img_1 = cv2.resize(img, (imgSize, imgSize))
-=======
+        ori_img = cv2.imread(filename)  # filename : original image (~900)
+        crop_img = ori_img[ori_img.shape[0] // 2 - 200:ori_img.shape[0] // 2 + 200,
+                   ori_img.shape[1] // 2 - 200:ori_img.shape[1] // 2 + 200,
+                   ...]
 
-
-        ### crop_img : size :200*200
-        crop_img_size = 200
-        input_img_1 = cv2.resize(img, (crop_img_size, crop_img_size))
->>>>>>> 86fb82ef6aa3df69dce258f1a00cac992ea346ae
-
+        input_img_1 = cv2.resize(crop_img, (imgSize, imgSize))
         image = get_data(input_img_1)
+
         mod.forward(Batch([mx.nd.array(image)]))
         output_outer = mod.get_outputs()[0].asnumpy()
         output_outer = output_outer * float(imgSize)
         output_outer = np.reshape(output_outer, (2, -1))
-<<<<<<< HEAD
-        print output_outer[:10]
-=======
-        print(output_outer[:10])
->>>>>>> 86fb82ef6aa3df69dce258f1a00cac992ea346ae
 
-        check_points=np.ones((3,87),dtype='float32')
-        for i in range(output_outer.shape[1]):
-            check_points[0][i]=float(output_outer[0, i]*scale_ratio)
-            check_points[1][i]=float(output_outer[1, i]*scale_ratio)
-        temp=np.dot(inverse_matrix,check_points)
-        temp=temp.astype(int)
-
-<<<<<<< HEAD
-        print temp.shape
-        print temp[:10]
-=======
-        print(temp.shape)
-        print(temp[:10])
->>>>>>> 86fb82ef6aa3df69dce258f1a00cac992ea346ae
+        # scale_ratio=crop_img.shape[0]*1.0/imgSize
+        # check_points=np.ones((3,87),dtype='float32')
+        # for i in range(output_outer.shape[1]):
+        #     check_points[0][i]=float(output_outer[0, i]*scale_ratio)
+        #     check_points[1][i]=float(output_outer[1, i]*scale_ratio)
+        # temp=np.dot(inverse_matrix,check_points)
+        # temp=temp.astype(int)
 
         i=0
         while i<87:
-            cv2.circle(img, (temp[0][i],temp[1][i]), 1,
+            cv2.circle(input_img_1, (int(output_outer[0][i]),int(output_outer[1][i])), 1,
                        (0, 255, 0), 1)
             i+=1
-        cv2.imshow("show",img)
+        cv2.imshow("show",input_img_1)
         cv2.waitKey()
 
     print("one pic done")
