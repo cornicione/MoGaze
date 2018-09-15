@@ -4,6 +4,19 @@ import numpy as np
 import math
 import mxnet as mx
 
+def ReadGazeTxt(gt_txt):
+    ret = {}
+    with open(gt_txt,"r") as f:
+        while True :
+            line = f.readline()
+            if not line:
+                break
+            line = line.strip("\n")+".png"
+
+            lo = float(f.readline().strip("\n"))
+            la = float(f.readline().strip("\n"))
+            ret[line] = np.array([lo,la],dtype=np.float32)
+    return ret
 
 
 def NumpyCal(head_pose,eye_pose):
@@ -29,18 +42,22 @@ def NumpyCal(head_pose,eye_pose):
     gaze_lola = np.array([gaze_lo,gaze_la]).astype(np.float32)
     return gaze_lola
 
+
 ##
 # 1. write head pred to txt (1 lines)
 # 2. get eye pred from txt (4 lines)
 ##
 
-# pred_head_txt = ""
-# pred_eye_txt = ""
-# valid_name_path = ""
 
+head_gt = ReadGazeTxt('./data/train/head_label.txt')
+eye_gt = ReadGazeTxt('./data/train/eye_label.txt')
+gaze_gt = ReadGazeTxt('./data/train/gaze_label.txt')
 
-head = np.array([10., 20.]).astype(np.float32)
-eye = np.array([15., 25.]).astype(np.float32)
-gaze_numpy = NumpyCal(head,eye)
+for name,hgt in head_gt.items():
+    egt = eye_gt[name]
+    ggt = gaze_gt[name]
+    gcal = NumpyCal(hgt,egt)
+    print gcal
+    print ggt
 
 print "done"
